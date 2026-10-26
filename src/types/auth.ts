@@ -12,6 +12,12 @@ export interface LoginInput {
   password: string;
 }
 
+export interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+}
+
 export interface LoginResponse {
   access_token: string;
   token_type: "Bearer";
@@ -22,6 +28,5 @@ export interface LoginResponse {
 export interface Session {
   token: string;
   user: AuthUser;
-  /** Epoch em milissegundos extraído do `exp` do JWT. */
   expiresAt: number | null;
 }

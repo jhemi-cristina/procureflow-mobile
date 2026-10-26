@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { AppProviders } from "@/providers/app-providers";
 import { colors } from "@/theme";
 
-// Mantém a splash visível até a sessão salva no dispositivo ser lida.
 SplashScreen.preventAutoHideAsync();
 
 function SplashScreenController() {
@@ -33,7 +32,6 @@ function RootNavigator() {
         headerBackButtonDisplayMode: "minimal",
       }}
     >
-      {/* Telas autenticadas: inacessíveis sem sessão. */}
       <Stack.Protected guard={isSignedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="request/[id]" options={{ title: "Solicitação" }} />
@@ -43,9 +41,9 @@ function RootNavigator() {
         />
       </Stack.Protected>
 
-      {/* Login: só aparece para quem não está autenticado. */}
       <Stack.Protected guard={!isSignedIn}>
         <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="register" options={{ headerShown: false }} />
       </Stack.Protected>
     </Stack>
   );

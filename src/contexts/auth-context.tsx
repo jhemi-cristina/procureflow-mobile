@@ -9,18 +9,18 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { authApi } from "@/lib/api/auth";
 import { setUnauthorizedHandler } from "@/lib/api/client";
+import { usersApi } from "@/lib/api/users";
 import { secureSession } from "@/lib/auth/session-storage";
-import type { AuthUser, LoginInput, Session } from "@/types/auth";
+import type { AuthUser, LoginInput, RegisterInput, Session } from "@/types/auth";
 
-// Limite do setTimeout (~24,8 dias); acima disso o timer dispararia imediatamente.
 const MAX_TIMEOUT_MS = 2 ** 31 - 1;
 
 export interface AuthContextValue {
-  /** `true` enquanto a sessão salva no dispositivo está sendo lida. */
   isLoading: boolean;
   user: AuthUser | null;
   token: string | null;
   signIn: (credentials: LoginInput) => Promise<void>;
+  signUp: (input: RegisterInput) => Promise<void>;
   signOut: () => void;
 }
 
@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Restaura a sessão do armazenamento seguro ao abrir o app.
   useEffect(() => {
     let active = true;
     secureSession.load().then((stored) => {
@@ -55,13 +54,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(await secureSession.save(access_token, user));
   }, []);
 
-  // Qualquer 401 vindo da API encerra a sessão.
+  const signUp = useCallback(
+    async (input: RegisterInput) => {
+      await usersApi.register(input);
+      try {
+        await signIn({ email: input.email, password: input.password });
+      } catch {
+        throw new Error("Conta criada com sucesso! Faça login para continuar.");
+      }
+    },
+    [signIn],
+  );
+
   useEffect(() => {
     setUnauthorizedHandler(signOut);
     return () => setUnauthorizedHandler(null);
   }, [signOut]);
 
-  // Encerra a sessão automaticamente quando o JWT expira.
   useEffect(() => {
     if (!session?.expiresAt) return;
     const delay = Math.min(session.expiresAt - Date.now(), MAX_TIMEOUT_MS);
@@ -75,9 +84,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       token: session?.token ?? null,
       signIn,
+      signUp,
       signOut,
     }),
-    [isLoading, session, signIn, signOut],
+    [isLoading, session, signIn, signUp, signOut],
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;
