@@ -7,6 +7,22 @@ export interface AuthUser {
   role: UserRole;
 }
 
+export interface ManagedUser extends AuthUser {
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Paginated<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
 export interface LoginInput {
   email: string;
   password: string;

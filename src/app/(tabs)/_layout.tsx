@@ -53,6 +53,14 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="users"
+        options={{
+          title: "Usuários",
+          tabBarIcon: tabIcon("people-outline", "people"),
+          href: user?.role === "admin" ? undefined : null,
+        }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{ title: "Perfil", tabBarIcon: tabIcon("person-circle-outline", "person-circle") }}
       />
