@@ -17,6 +17,18 @@ export const purchaseRequestsApi = {
     return apiRequest<PurchaseRequest[]>(BASE_PATH, { token });
   },
 
+  approvals(token: string) {
+    return apiRequest<PurchaseRequest[]>(`${BASE_PATH}/approvals`, { token });
+  },
+
+  recent(token: string, limit = 10) {
+    return apiRequest<PurchaseRequest[]>(`${BASE_PATH}/recent?limit=${limit}`, { token });
+  },
+
+  get(token: string, id: string) {
+    return apiRequest<PurchaseRequest>(requestPath(id), { token });
+  },
+
   create(token: string, input: PurchaseRequestInput) {
     return apiRequest<PurchaseRequest>(BASE_PATH, { method: "POST", token, body: input });
   },

@@ -4,10 +4,16 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Link, router } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useAuth } from "@/hooks/use-auth";
-import { usePurchaseRequests } from "@/hooks/use-purchase-requests";
+import {
+  RECENT_CACHE_LIMIT,
+  useApprovalQueue,
+  usePurchaseRequests,
+  useTeamRecentRequests,
+} from "@/hooks/use-purchase-requests";
 import { useRequestStats } from "@/hooks/use-request-stats";
 import { getErrorMessage } from "@/lib/api/client";
 import { formatCompactCurrency, getFirstName, greetingFor } from "@/lib/format";
+import { canDecide } from "@/lib/purchase-requests";
 import { colors, spacing } from "@/theme";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/card";
@@ -33,11 +39,24 @@ export default function DashboardScreen() {
   const { data: requests = [], isPending, isError, error, refetch, isRefetching } =
     usePurchaseRequests();
   const stats = useRequestStats(requests);
-  // Data fixada na montagem: mantém o render puro e consistente.
   const [now] = useState(() => new Date());
 
-  const pending = requests.filter((request) => request.status === "pending");
+  const isApprover = canDecide(user?.role);
+  const queue = useApprovalQueue();
+  const pending = isApprover
+    ? (queue.data ?? [])
+    : requests.filter((request) => request.status === "pending");
+  const team = useTeamRecentRequests(RECENT_CACHE_LIMIT);
+  const recent = isApprover ? (team.data ?? []) : requests.slice(0, RECENT_LIMIT);
+
   const openForm = () => router.push("/request/form");
+  const refreshAll = () => {
+    void refetch();
+    if (isApprover) {
+      void queue.refetch();
+      void team.refetch();
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
@@ -45,8 +64,8 @@ export default function DashboardScreen() {
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => void refetch()}
+            refreshing={isRefetching || queue.isRefetching || team.isRefetching}
+            onRefresh={refreshAll}
             tintColor={colors.primary}
             colors={[colors.primary]}
           />
@@ -104,8 +123,15 @@ export default function DashboardScreen() {
 
             <View style={styles.section}>
               <SectionHeader
-                title="Aguardando aprovação"
+                title={isApprover ? "Para você aprovar" : "Aguardando aprovação"}
                 description={pluralize(pending.length, "solicitação pendente", "solicitações pendentes")}
+                action={
+                  isApprover && pending.length > 0 ? (
+                    <Link href="/approvals" style={styles.link}>
+                      Ver fila
+                    </Link>
+                  ) : undefined
+                }
               />
               {pending.length === 0 ? (
                 <EmptyState
@@ -124,23 +150,34 @@ export default function DashboardScreen() {
 
             <View style={styles.section}>
               <SectionHeader
-                title="Recentes"
+                title={isApprover ? "Recentes da equipe" : "Recentes"}
+                description={
+                  isApprover ? "Últimas solicitações enviadas por todos os usuários." : undefined
+                }
                 action={
-                  <Link href="/requests" style={styles.link}>
-                    Ver todas
+                  <Link href={isApprover ? "/approvals" : "/requests"} style={styles.link}>
+                    {isApprover ? "Ver fila" : "Ver todas"}
                   </Link>
                 }
               />
-              {requests.length === 0 ? (
+              {isApprover && team.isPending ? (
+                <LoadingState label="Carregando solicitações..." />
+              ) : isApprover && team.isError ? (
+                <ErrorState message={getErrorMessage(team.error)} onRetry={team.refetch} />
+              ) : recent.length === 0 ? (
                 <EmptyState
                   title="Nenhuma solicitação ainda"
-                  description="Crie sua primeira solicitação de compra para começar."
+                  description={
+                    isApprover
+                      ? "Quando a equipe enviar solicitações, elas aparecem aqui."
+                      : "Crie sua primeira solicitação de compra para começar."
+                  }
                   actionLabel="Nova solicitação"
                   onAction={openForm}
                 />
               ) : (
                 <View style={styles.list}>
-                  {requests.slice(0, RECENT_LIMIT).map((request) => (
+                  {recent.map((request) => (
                     <RequestCard key={request.id} request={request} />
                   ))}
                 </View>

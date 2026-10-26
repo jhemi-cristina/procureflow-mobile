@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { purchaseRequestsApi } from "@/lib/api/purchase-requests";
+import { canDecide } from "@/lib/purchase-requests";
 import type {
   DecidePurchaseRequestInput,
   PurchaseRequest,
@@ -9,14 +10,19 @@ import { useAuth } from "./use-auth";
 
 export const purchaseRequestKeys = {
   all: ["purchase-requests"] as const,
+  mine: ["purchase-requests", "mine"] as const,
+  approvals: ["purchase-requests", "approvals"] as const,
+  recent: (limit: number) => ["purchase-requests", "recent", limit] as const,
+  detail: (id: string) => ["purchase-requests", "detail", id] as const,
 };
+
+export const RECENT_CACHE_LIMIT = 4;
 
 function requireToken(token: string | null) {
   if (!token) throw new Error("Sessão expirada. Faça login novamente.");
   return token;
 }
 
-/** Invalida a lista após qualquer mutação para manter os dados sincronizados com a API. */
 function useInvalidateRequests() {
   const queryClient = useQueryClient();
   return () => queryClient.invalidateQueries({ queryKey: purchaseRequestKeys.all });
@@ -26,25 +32,44 @@ export function usePurchaseRequests() {
   const { token } = useAuth();
 
   return useQuery({
-    queryKey: purchaseRequestKeys.all,
+    queryKey: purchaseRequestKeys.mine,
     queryFn: () => purchaseRequestsApi.list(requireToken(token)),
     enabled: Boolean(token),
   });
 }
 
-/**
- * Lê uma solicitação a partir da lista em cache (a API só lista as do próprio usuário,
- * então a lista já contém tudo que esta tela pode exibir).
- */
-export function usePurchaseRequest(id: string | undefined) {
-  const { token } = useAuth();
+export function useApprovalQueue() {
+  const { token, user } = useAuth();
 
   return useQuery({
-    queryKey: purchaseRequestKeys.all,
-    queryFn: () => purchaseRequestsApi.list(requireToken(token)),
+    queryKey: purchaseRequestKeys.approvals,
+    queryFn: () => purchaseRequestsApi.approvals(requireToken(token)),
+    enabled: Boolean(token) && canDecide(user?.role),
+  });
+}
+
+export function useTeamRecentRequests(limit: number) {
+  const { token, user } = useAuth();
+
+  return useQuery({
+    queryKey: purchaseRequestKeys.recent(limit),
+    queryFn: () => purchaseRequestsApi.recent(requireToken(token), limit),
+    enabled: Boolean(token) && canDecide(user?.role),
+  });
+}
+
+export function usePurchaseRequest(id: string | undefined) {
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
+
+  return useQuery({
+    queryKey: purchaseRequestKeys.detail(id ?? ""),
+    queryFn: () => purchaseRequestsApi.get(requireToken(token), id!),
     enabled: Boolean(token && id),
-    select: (requests: PurchaseRequest[]) =>
-      requests.find((request) => request.id === id) ?? null,
+    placeholderData: () =>
+      [purchaseRequestKeys.mine, purchaseRequestKeys.approvals, purchaseRequestKeys.recent(RECENT_CACHE_LIMIT)]
+        .flatMap((key) => queryClient.getQueryData<PurchaseRequest[]>(key) ?? [])
+        .find((request) => request.id === id),
   });
 }
 
@@ -58,7 +83,6 @@ export function useSavePurchaseRequest() {
       input,
       submit,
     }: {
-      /** Quando informado, atualiza o rascunho; senão, cria um novo. */
       id?: string;
       input: PurchaseRequestInput;
       submit: boolean;
