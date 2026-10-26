@@ -13,7 +13,6 @@ export interface PurchaseRequest {
   id: string;
   title: string;
   description: string | null;
-  /** Valor numérico serializado como string pela API (ex.: "1250.00"). */
   estimatedAmount: string;
   status: PurchaseRequestStatus;
   requester: PurchaseRequestUser;

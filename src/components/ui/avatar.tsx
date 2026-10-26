@@ -10,7 +10,6 @@ const TONES = [
   { color: "#15966A", background: "#E4F8EE" },
 ];
 
-/** Cor estável a partir do nome, para o mesmo usuário ter sempre a mesma cor. */
 function toneFor(name: string) {
   const hash = [...name].reduce((total, char) => total + char.charCodeAt(0), 0);
   return TONES[hash % TONES.length];

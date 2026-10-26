@@ -52,7 +52,6 @@ export default function RequestsScreen() {
     usePurchaseRequests();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
-  // Mantém a digitação fluida mesmo com listas grandes.
   const deferredSearch = useDeferredValue(search);
 
   const filtered = useMemo(
@@ -105,7 +104,6 @@ export default function RequestsScreen() {
             colors={[colors.primary]}
           />
         }
-        // Passado como elemento (e não componente) para o TextInput não perder o foco.
         ListHeaderComponent={
           <View style={styles.header}>
             <ScreenHeader

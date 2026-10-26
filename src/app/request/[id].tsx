@@ -29,7 +29,6 @@ import { TextField } from "@/components/ui/text-field";
 
 const MAX_REASON_LENGTH = 1000;
 
-/** Confirmação nativa; na web, `Alert` com botões não existe, então usamos `confirm`. */
 function confirmAction(title: string, message: string, onConfirm: () => void) {
   if (Platform.OS === "web") {
     if (globalThis.confirm?.(`${title}\n\n${message}`)) onConfirm();

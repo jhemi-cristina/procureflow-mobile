@@ -9,7 +9,6 @@ function createQueryClient() {
     defaultOptions: {
       queries: {
         staleTime: 30_000,
-        // Erros de cliente (4xx) não melhoram com novas tentativas.
         retry: (failureCount, error) =>
           !(error instanceof ApiError && error.status >= 400 && error.status < 500) &&
           failureCount < 2,

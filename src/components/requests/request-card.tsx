@@ -8,7 +8,6 @@ import { colors, radius, shadow, spacing } from "@/theme";
 import type { PurchaseRequest } from "@/types/purchase-request";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-/** `memo` evita re-renderizar itens que não mudaram quando a FlatList atualiza. */
 export const RequestCard = memo(function RequestCard({ request }: { request: PurchaseRequest }) {
   return (
     <Pressable

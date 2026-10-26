@@ -1,4 +1,3 @@
-// Precisa ser acessado com notação de ponto para o Expo embutir o valor no bundle.
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const REQUEST_TIMEOUT_MS = 15_000;
@@ -21,7 +20,6 @@ type ApiRequestOptions = Omit<RequestInit, "body" | "headers"> & {
 
 let unauthorizedHandler: (() => void) | null = null;
 
-/** Registra um callback disparado quando uma requisição autenticada retorna 401. */
 export function setUnauthorizedHandler(handler: (() => void) | null) {
   unauthorizedHandler = handler;
 }
@@ -44,7 +42,6 @@ export async function apiRequest<T>(
     throw new ApiError("Configure EXPO_PUBLIC_API_URL no arquivo .env.local.", 0);
   }
 
-  // Redes móveis podem travar sem responder; o timeout evita loading infinito.
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 

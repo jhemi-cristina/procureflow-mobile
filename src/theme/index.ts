@@ -1,4 +1,3 @@
-/** Design tokens compartilhados por todo o app (mesma identidade visual do ProcureFlow Web). */
 export const colors = {
   background: "#F7F8FA",
   surface: "#FFFFFF",

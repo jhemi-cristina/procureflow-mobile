@@ -2,7 +2,6 @@ import { useState, type ComponentRef, type ReactNode, type Ref } from "react";
 import { StyleSheet, Text, TextInput, View, type TextInputProps } from "react-native";
 import { colors, radius, typography } from "@/theme";
 
-/** Instância do TextInput (para `ref.current?.focus()`). */
 export type TextInputHandle = ComponentRef<typeof TextInput>;
 
 interface TextFieldProps extends Omit<TextInputProps, "ref"> {
@@ -10,7 +9,6 @@ interface TextFieldProps extends Omit<TextInputProps, "ref"> {
   error?: string;
   hint?: string;
   icon?: ReactNode;
-  /** Conteúdo à direita do input, como um botão de mostrar senha. */
   trailing?: ReactNode;
   ref?: Ref<TextInputHandle>;
 }

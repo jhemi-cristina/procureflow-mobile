@@ -4,10 +4,6 @@ import type { AuthUser, Session } from "@/types/auth";
 
 const STORAGE_KEY = "procureflow.session";
 
-/**
- * No iOS/Android a sessão fica no Keychain/Keystore (criptografado pelo sistema).
- * O SecureStore não existe na web, então lá usamos localStorage como fallback.
- */
 const storage = {
   async get() {
     if (Platform.OS === "web") return globalThis.localStorage?.getItem(STORAGE_KEY) ?? null;
@@ -64,7 +60,6 @@ export const secureSession = {
     try {
       await storage.remove();
     } catch {
-      // Se a remoção falhar, a sessão em memória já foi descartada pelo contexto.
     }
   },
 };

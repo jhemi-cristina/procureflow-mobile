@@ -8,7 +8,6 @@ import { EmptyState, LoadingState } from "@/components/ui/feedback";
 import { RequestForm } from "@/components/requests/request-form";
 
 export default function RequestFormScreen() {
-  // Sem `id` o formulário cria uma solicitação; com `id`, edita o rascunho.
   const { id } = useLocalSearchParams<{ id?: string }>();
   const isEditing = Boolean(id);
   const { data: request, isPending } = usePurchaseRequest(id);

@@ -10,7 +10,6 @@ import type { PurchaseRequest, PurchaseRequestInput } from "@/types/purchase-req
 import { Button } from "@/components/ui/button";
 import { TextField, type TextInputHandle } from "@/components/ui/text-field";
 
-// Aceita "1250", "1250,50", "1.250,50" ou "1250.50".
 const AMOUNT_PATTERN = /^(\d{1,3}(\.\d{3})+|\d+)(,\d{1,2})?$|^\d+(\.\d{1,2})?$/;
 
 const requestSchema = z.object({

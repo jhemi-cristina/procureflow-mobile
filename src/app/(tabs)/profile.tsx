@@ -28,7 +28,6 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
 
   const confirmSignOut = () => {
-    // Alert com botões não existe na web; lá a saída é direta.
     if (Platform.OS === "web") return signOut();
     Alert.alert("Sair da conta", "Deseja encerrar sua sessão neste dispositivo?", [
       { text: "Cancelar", style: "cancel" },

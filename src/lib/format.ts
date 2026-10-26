@@ -23,7 +23,6 @@ export function formatCurrency(value: string | number) {
   return currencyFormatter.format(amount);
 }
 
-/** Formato curto ("R$ 84,2 mil") implementado à mão: `notation: "compact"` não é garantido no Hermes. */
 export function formatCompactCurrency(value: number) {
   const units = [
     { limit: 1e9, suffix: "bi" },
@@ -59,7 +58,6 @@ export function getFirstName(name: string) {
   return name.trim().split(/\s+/)[0] ?? name;
 }
 
-/** Converte "1.250,50" ou "1250.50" para o formato aceito pela API ("1250.50"). */
 export function toApiAmount(value: string) {
   const normalized = value.trim().replace(/\s|R\$/g, "");
   const decimal = normalized.includes(",")
@@ -68,7 +66,6 @@ export function toApiAmount(value: string) {
   return Number(decimal).toFixed(2);
 }
 
-/** Converte "1250.50" (API) para "1250,50" (input do formulário). */
 export function fromApiAmount(value: string) {
   return Number(value).toFixed(2).replace(".", ",");
 }
