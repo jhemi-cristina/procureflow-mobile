@@ -9,6 +9,7 @@ import {
   useApprovalQueue,
   usePurchaseRequests,
   useTeamRecentRequests,
+  useTeamRequests,
 } from "@/hooks/use-purchase-requests";
 import { useRequestStats } from "@/hooks/use-request-stats";
 import { getErrorMessage } from "@/lib/api/client";
@@ -36,23 +37,29 @@ function pluralize(count: number, singular: string, plural: string) {
 
 export default function DashboardScreen() {
   const { user } = useAuth();
-  const { data: requests = [], isPending, isError, error, refetch, isRefetching } =
-    usePurchaseRequests();
+  const isApprover = canDecide(user?.role);
+  const mine = usePurchaseRequests();
+  const teamAll = useTeamRequests();
+  const { data: requests = [], isPending, isError, error, refetch, isRefetching } = isApprover
+    ? teamAll
+    : mine;
+  const myRequests = mine.data ?? [];
   const stats = useRequestStats(requests);
+  const people = new Set(requests.map((request) => request.requester.id)).size;
   const [now] = useState(() => new Date());
 
-  const isApprover = canDecide(user?.role);
   const queue = useApprovalQueue();
   const pending = isApprover
     ? (queue.data ?? [])
-    : requests.filter((request) => request.status === "pending");
+    : myRequests.filter((request) => request.status === "pending");
   const team = useTeamRecentRequests(RECENT_CACHE_LIMIT);
-  const recent = isApprover ? (team.data ?? []) : requests.slice(0, RECENT_LIMIT);
+  const recent = isApprover ? (team.data ?? []) : myRequests.slice(0, RECENT_LIMIT);
 
   const openForm = () => router.push("/request/form");
   const refreshAll = () => {
     void refetch();
     if (isApprover) {
+      void mine.refetch();
       void queue.refetch();
       void team.refetch();
     }
@@ -74,7 +81,11 @@ export default function DashboardScreen() {
         <ScreenHeader
           eyebrow={weekdayFormatter.format(now)}
           title={`${greetingFor(now)}, ${getFirstName(user?.name ?? "")}`}
-          description="Resumo das suas solicitações de compra."
+          description={
+            isApprover
+              ? "Resumo das solicitações de toda a equipe."
+              : "Resumo das suas solicitações de compra."
+          }
         />
 
         <Button
@@ -94,7 +105,11 @@ export default function DashboardScreen() {
               <MetricCard
                 title="Total"
                 value={String(stats.total)}
-                footnote={pluralize(stats.drafts, "rascunho", "rascunhos")}
+                footnote={
+                  isApprover
+                    ? `De ${pluralize(people, "pessoa", "pessoas")}`
+                    : pluralize(stats.drafts, "rascunho", "rascunhos")
+                }
                 icon="clipboard-outline"
                 tone="violet"
               />

@@ -12,6 +12,7 @@ export const purchaseRequestKeys = {
   all: ["purchase-requests"] as const,
   mine: ["purchase-requests", "mine"] as const,
   approvals: ["purchase-requests", "approvals"] as const,
+  team: ["purchase-requests", "team"] as const,
   recent: (limit: number) => ["purchase-requests", "recent", limit] as const,
   detail: (id: string) => ["purchase-requests", "detail", id] as const,
 };
@@ -48,6 +49,16 @@ export function useApprovalQueue() {
   });
 }
 
+export function useTeamRequests() {
+  const { token, user } = useAuth();
+
+  return useQuery({
+    queryKey: purchaseRequestKeys.team,
+    queryFn: () => purchaseRequestsApi.team(requireToken(token)),
+    enabled: Boolean(token) && canDecide(user?.role),
+  });
+}
+
 export function useTeamRecentRequests(limit: number) {
   const { token, user } = useAuth();
 
@@ -67,7 +78,12 @@ export function usePurchaseRequest(id: string | undefined) {
     queryFn: () => purchaseRequestsApi.get(requireToken(token), id!),
     enabled: Boolean(token && id),
     placeholderData: () =>
-      [purchaseRequestKeys.mine, purchaseRequestKeys.approvals, purchaseRequestKeys.recent(RECENT_CACHE_LIMIT)]
+      [
+        purchaseRequestKeys.mine,
+        purchaseRequestKeys.approvals,
+        purchaseRequestKeys.team,
+        purchaseRequestKeys.recent(RECENT_CACHE_LIMIT),
+      ]
         .flatMap((key) => queryClient.getQueryData<PurchaseRequest[]>(key) ?? [])
         .find((request) => request.id === id),
   });

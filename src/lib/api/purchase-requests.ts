@@ -21,6 +21,10 @@ export const purchaseRequestsApi = {
     return apiRequest<PurchaseRequest[]>(`${BASE_PATH}/approvals`, { token });
   },
 
+  team(token: string) {
+    return apiRequest<PurchaseRequest[]>(`${BASE_PATH}/team`, { token });
+  },
+
   recent(token: string, limit = 10) {
     return apiRequest<PurchaseRequest[]>(`${BASE_PATH}/recent?limit=${limit}`, { token });
   },
