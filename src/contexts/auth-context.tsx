@@ -66,6 +66,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [signIn],
   );
 
+  const token = session?.token;
+  const storedUser = session?.user;
+
+  useEffect(() => {
+    if (!token) return;
+    let active = true;
+
+    authApi
+      .getProfile(token)
+      .then(async (profile) => {
+        const changed =
+          !storedUser ||
+          storedUser.name !== profile.name ||
+          storedUser.email !== profile.email ||
+          storedUser.role !== profile.role;
+        if (!active || !changed) return;
+        setSession(await secureSession.save(token, profile));
+        void queryClient.invalidateQueries();
+      })
+      .catch(() => undefined);
+
+    return () => {
+      active = false;
+    };
+  }, [token, storedUser, queryClient]);
+
   useEffect(() => {
     setUnauthorizedHandler(signOut);
     return () => setUnauthorizedHandler(null);
